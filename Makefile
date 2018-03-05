@@ -17,6 +17,8 @@ all: .env_ok $(LIBNAME).a demos/demo_ivfpq_indexing
 
 py: _swigfaiss.so
 
+java: _swigfaiss.so
+
 
 
 #############################
@@ -87,7 +89,16 @@ python/_swigfaiss.so: python/swigfaiss_wrap.cxx $(LIBNAME).a
 	$(CXX) -I. $(CXXFLAGS) $(LDFLAGS) $(PYTHONCFLAGS) $(SHAREDFLAGS) \
 	-o $@ $^ $(BLASLDFLAGSSO)
 
-_swigfaiss.so: python/_swigfaiss.so
+# java swig
+java/swigfaiss_wrap.cxx: swigfaiss.swig $(HFILES)
+	$(SWIGEXEC) -java -c++ -Doverride= -o $@ $<
+
+java/_swigfaiss.so: java/swigfaiss_wrap.cxx $(LIBNAME).a
+	$(CXX) -I. $(CXXFLAGS) $(LDFLAGS) $(JAVACFLAGS) $(SHAREDFLAGS) \
+	-o $@ $^ $(BLASLDFLAGSSO)
+
+# combine swig
+_swigfaiss.so: python/_swigfaiss.so java/_swigfaiss.so
 	cp python/_swigfaiss.so python/swigfaiss.py .
 
 #############################

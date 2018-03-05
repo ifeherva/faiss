@@ -18,7 +18,18 @@
 #ifdef GPU_WRAPPER
 %module swigfaiss_gpu;
 #else
+#ifdef SWIGJAVA
+%module(directors="1") swigfaiss;
+
+// Java does not have multiple inheritance so we convert Index into an interface
+%include <swiginterface.i>
+%interface_impl(faiss::Index);
+
+%rename(compute) faiss::HNSW::DistanceComputer::operator();
+
+#else
 %module swigfaiss;
+#endif
 #endif
 
 #pragma SWIG nowarn=321
@@ -70,6 +81,11 @@ extern "C" {
 
 #endif
 
+#ifdef SWIGJAVA
+
+#define SWIG_FILE_WITH_INIT
+
+#endif
 
 #include "IndexFlat.h"
 #include "VectorTransform.h"
@@ -401,7 +417,7 @@ struct AsyncIndexSearchC {
 #endif
 
 
-#ifdef SWIGPYTHON
+#if defined(SWIGPYTHON)
 
 %define DOWNCAST(subclass)
     if (dynamic_cast<faiss::subclass *> ($1)) {
@@ -416,6 +432,8 @@ struct AsyncIndexSearchC {
 %enddef
 
 #endif
+
+#ifndef SWIGJAVA
 
 %newobject read_index;
 %newobject read_VectorTransform;
@@ -480,6 +498,7 @@ struct AsyncIndexSearchC {
     SWIG_arg++;
 #endif
 }
+#endif
 
 // just to downcast pointers that come from elsewhere (eg. direct
 // access to object fields)
